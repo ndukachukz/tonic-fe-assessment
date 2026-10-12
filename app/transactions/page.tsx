@@ -1,14 +1,19 @@
 'use client'
 import { Suspense } from 'react'
+import {
+  StateMessage,
+  TransactionDetails,
+  TransactionDetailsSkeleton,
+  TransactionsSkeleton,
+} from '@/components/transactions'
 import { Button, Card, Drawer } from '@/components/ui'
-import { StateMessage, TransactionDetails, TransactionsSkeleton } from '@/components/transactions'
-import { TransactionFilters } from './TransactionFilters/TransactionFilters'
-import { TransactionList } from './TransactionList/TransactionList'
-import { TransactionsPagination } from './TransactionsPagination/TransactionsPagination'
 import { TRANSACTIONS_PAGE_SIZE } from './constants'
 import { useTransactionParams } from './hooks/use-transaction-params'
 import { useTransactionDetails, useTransactionList } from './hooks/use-transactions'
 import styles from './page.module.css'
+import { TransactionFilters } from './TransactionFilters/TransactionFilters'
+import { TransactionList } from './TransactionList/TransactionList'
+import { TransactionsPagination } from './TransactionsPagination/TransactionsPagination'
 
 function TransactionsFallback() {
   return (
@@ -35,7 +40,8 @@ function TransactionsContent() {
   const stale = list.isLoading && list.transactions !== undefined
   const total = list.meta?.total ?? 0
   const subtitle = showSkeleton ? 'Loading transactions…' : `${total} transaction${total === 1 ? '' : 's'}`
-  const isEmpty = !showSkeleton && !list.error && (list.transactions ?? []).length === 0
+  const showPagination = !showSkeleton && !list.error
+  const showDetailsNotFound = !details.isLoading && !details.error && !details.details
 
   return (
     <div className={styles.page}>
@@ -57,56 +63,19 @@ function TransactionsContent() {
         onClear={params.clearFilters}
       />
 
-      {showSkeleton && (
-        <Card padding="none">
-          <TransactionsSkeleton />
-        </Card>
-      )}
+      <TransactionList
+        transactions={list.transactions ?? []}
+        selectedId={txnId}
+        stale={stale}
+        isLoading={list.isLoading}
+        error={list.error || null}
+        hasActiveFilters={hasActiveFilters}
+        onSelect={(tx) => params.updateParams({ txn: tx.id }, 'push')}
+        onRetry={list.retry}
+        onClearFilters={params.clearFilters}
+      />
 
-      {!showSkeleton && list.error && (
-        <Card>
-          <StateMessage
-            icon="alert"
-            title="Something went wrong"
-            text={list.error}
-            action={<Button onClick={list.retry}>Try again</Button>}
-          />
-        </Card>
-      )}
-
-      {isEmpty && (
-        <Card>
-          <StateMessage
-            icon="inbox"
-            title={hasActiveFilters ? 'No matching transactions' : 'No transactions yet'}
-            text={
-              hasActiveFilters
-                ? 'Try a different search or clear your filters.'
-                : 'Transactions will appear here once there is activity.'
-            }
-            action={
-              hasActiveFilters && (
-                <Button variant="secondary" onClick={params.clearFilters}>
-                  Clear filters
-                </Button>
-              )
-            }
-          />
-        </Card>
-      )}
-
-      {!showSkeleton && !list.error && (list.transactions ?? []).length > 0 && (
-        <Card padding="none">
-          <TransactionList
-            transactions={list.transactions ?? []}
-            selectedId={txnId}
-            stale={stale}
-            onSelect={(tx) => params.updateParams({ txn: tx.id }, 'push')}
-          />
-        </Card>
-      )}
-
-      {!showSkeleton && !list.error && (
+      {showPagination && (
         <TransactionsPagination
           page={page}
           totalPages={list.meta?.totalPages ?? 0}
@@ -121,17 +90,28 @@ function TransactionsContent() {
         title="Transaction details"
         onClose={() => params.updateParams({ txn: undefined }, 'replace')}
       >
-        {details.isLoading && <p className={styles.drawerMessage}>Loading details…</p>}
+        {details.isLoading && <TransactionDetailsSkeleton />}
         {!details.isLoading && details.error && (
           <StateMessage
-            icon="alert"
-            title="Couldn't load this transaction"
-            text={details.error}
-            action={<Button onClick={details.retry}>Try again</Button>}
+            icon="search"
+            title="Transaction not found"
+            text={'It may have been removed, or the link is wrong.'}
+            action={
+              <Button variant="secondary" onClick={() => params.updateParams({ txn: undefined }, 'replace')}>
+                Back to transactions
+              </Button>
+            }
           />
         )}
         {!details.isLoading && !details.error && details.details && (
           <TransactionDetails transaction={details.details} />
+        )}
+        {showDetailsNotFound && (
+          <StateMessage
+            icon="search"
+            title="Transaction not found"
+            text="This transaction may have been removed or the link is incorrect."
+          />
         )}
       </Drawer>
     </div>

@@ -11,9 +11,12 @@ export interface StateMessageProps {
 
 /** Centered icon + title + text + optional action for empty/error states. */
 export function StateMessage({ icon, title, text, action }: StateMessageProps) {
+  const tone = icon === 'alert' ? styles.danger : styles.primary
   return (
     <div className={styles.state}>
-      <Icon name={icon} size={24} label={title} />
+      <span className={`${styles.icon} ${tone}`} aria-hidden="true">
+        <Icon name={icon} size={24} />
+      </span>
       <p className={styles.title}>{title}</p>
       <p className={styles.text}>{text}</p>
       {action}

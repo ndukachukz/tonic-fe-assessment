@@ -8,6 +8,26 @@
   color: var(--color-text-muted);
 }
 
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: var(--space-2);
+  border-radius: var(--radius-full);
+}
+
+.primary {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.danger {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
 .title {
   font-size: var(--text-md);
   font-weight: var(--weight-semibold);
