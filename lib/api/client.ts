@@ -1,4 +1,4 @@
-import type { ApiSuccess } from '@/types/api'
+import type { ApiErrorBody, ApiSuccess } from '@/types/api'
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '/api'
 
@@ -11,6 +11,19 @@ export class ApiError extends Error {
     super(message)
     this.name = 'ApiError'
   }
+}
+
+/**
+ * The client resolves error bodies instead of throwing (see convert page usage),
+ * so callers narrow with this guard instead of repeating the shape check.
+ */
+export function isApiError(body: unknown): body is ApiErrorBody {
+  return (
+    typeof body === 'object' &&
+    body !== null &&
+    'error' in body &&
+    typeof (body as ApiErrorBody).error?.message === 'string'
+  )
 }
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<ApiSuccess<T>> {

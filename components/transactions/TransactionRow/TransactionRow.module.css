@@ -58,14 +58,9 @@
   text-align: right;
 }
 
-.amount,
-.credit {
+.amount {
   font-size: var(--text-md);
   font-weight: var(--weight-semibold);
-}
-
-.credit {
-  color: var(--color-success);
 }
 
 .meta {
